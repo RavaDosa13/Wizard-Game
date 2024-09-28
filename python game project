@@ -1,0 +1,522 @@
+import pygame
+import time
+from pygame import event
+from pygame.examples.eventlist import font
+from pygame import mixer
+import math
+
+pygame.init()
+
+#creating the screen, game name, and icon:
+size = 500
+rows = 10
+screen = pygame.display.set_mode((size,rows))
+
+pygame.display.set_caption("Escape the Monster")
+icon = pygame.image.load('monster.png')
+pygame.display.set_icon(icon)
+window = pygame.display.set_mode((size,size))
+
+blockImg = pygame.image.load('wall.png')
+torchImg = pygame.image.load('torch.png')
+playerImg = pygame.image.load('wizard.png')
+enemyImg = pygame.image.load('enemy.png')
+doorImg = pygame.image.load('door.png')
+scrollImg = pygame.image.load('scroll.png')
+keyImg = pygame.image.load('keys.png')
+blackImg = pygame.image.load('black.png')
+redImg = pygame.image.load('red.png')
+cageImg = pygame.image.load('cage.png')
+
+
+win_font = pygame.font.Font('freesansbold.ttf', 64)
+die_font = pygame.font.Font('freesansbold.ttf', 64)
+instruct_font = pygame.font.Font('freesansbold.ttf',42)
+content_font = pygame.font.Font('freesansbold.ttf',23)
+monster_font = pygame.font.Font('freesansbold.ttf',14)
+
+playerX = 240
+playerY = -15
+enemyX = 360
+enemyY = 185
+monsterX = 2
+monsterY = 2
+monster2X = 2
+monster2Y = 0
+doorX = 190
+doorY = 335
+coord = [(90, -15), (90, 35), (140, 35), (340, -15), (340, 35), (290, 35), (340, 85), (440, 435), (440, 385), (440, 335), (290, 335), (-10, 435),(-10, 385), (-40, 435), (290,435), (290,385), (290,285), (240,435), (190,435), (140,435), (90,435), (90,385), (90,335), (90,285), (40,435), (40,385), (40,335)]
+keyX = 390
+keyY = 435
+enemy2X = 140
+enemy2Y = 385
+
+previousup = False
+previousdown = False
+previousright = False
+previousleft = False
+
+left = False
+right = False
+up = False
+down = False
+
+def red(x,y,chasing):
+    if chasing:
+        screen.blit(redImg, (x,y))
+
+
+def key(x,y, key_found):
+    if not key_found:
+        screen.blit(keyImg, (x, y))
+
+def info():
+    info = monster_font.render("This monster chases once", True, (0,0,0))
+    screen.blit(info,(190,145))
+
+def info2():
+    info2 = monster_font.render("a key is picked up", True, (0,0,0))
+    screen.blit(info2,(205,170))
+
+def info3():
+    info3 = monster_font.render("This monster travels in", True, (0,0,0))
+    screen.blit(info3, (190,295))
+
+def info4():
+    info4 = monster_font.render("a straight line", True, (0,0,0))
+    screen.blit(info4, (215,320))
+
+def content():
+    content = content_font.render("1. Use arrow keys to move", True, (0,0,0))
+    screen.blit(content, (105, 115))
+
+def content2():
+    content2 = content_font.render("2. Press esc anytime to exit", True, (0,0,0))
+    screen.blit(content2,(105, 175))
+
+def content3():
+    content3 = content_font.render("3. Don't bump into walls",True, (0,0,0))
+    screen.blit(content3,(105,235))
+
+def content4():
+    content4 = content_font.render("4. Don't bump into Monsters", True, (0,0,0))
+    screen.blit(content4, (105,295))
+
+def content5():
+    content5 = content_font.render("5. Unlock the door to win", True, (0,0,0))
+    screen.blit(content5, (105,355))
+
+def content6():
+    content6 = content_font.render("Press space to start..be ready", True, (0,0,0))
+    screen.blit(content6, (96,395))
+
+def content7():
+    content7 = content_font.render("Have fun, hope you enjoy! ", True, (0,0,0))
+    screen.blit(content7,(105,445))
+
+def title():
+    title = instruct_font.render("INSTRUCTIONS", True, (0,0,0))
+    screen.blit(title,(94,25))
+
+def scroll(x,y):
+    screen.blit(scrollImg,(x,y))
+
+def block(x,y):
+    screen.blit(blockImg,(x,y))
+
+def player(x,y):
+    window.blit(playerImg, (x,y))
+
+def black(x,y):
+    window.blit(blackImg,(x,y))
+
+def place(x,y):
+    window.blit(redImg, (x, y))
+def torch(x,y):
+    screen.blit(torchImg, (x, y))
+
+def enemy(x,y):
+    screen.blit(enemyImg, (x,y))
+
+def cage(x,y):
+    screen.blit(cageImg, (x, y))
+def death():
+    death_text = die_font.render("GAME OVER", True, (128,0,0))
+    screen.blit(death_text, (50,250))
+
+def win():
+    win = win_font.render("YOU WIN!!", True, (255,255,128))
+    screen.blit(win, (150,150))
+
+def door(x,y):
+    screen.blit(doorImg, (x,y))
+
+def grid(window,size,rows):
+    distanceBtwRows = size // rows
+    x = 0
+    y = 0
+    for I in range(rows):
+        x += distanceBtwRows
+        y += distanceBtwRows
+        pygame.draw.line(window, (255,255,255), (x,0), (x,size))
+
+        pygame.draw.line(window, (255,255,255), (0,y), (size, y))
+
+def redraw(window):
+    global size, rows
+    #fill window with black
+    window.fill((0,0,0))
+    grid(window,size,rows)
+
+def keylock():
+    open = True
+    while open:
+        if playerX == 390:
+            if playerY == 435:
+                black(390,435)
+                return False
+
+def instruction():
+    show = True
+    while show:
+        scroll(5,5)
+        title()
+        content()
+        content2()
+        content3()
+        content4()
+        content5()
+        content6()
+        content7()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                show = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    show = False
+                if event.key == pygame.K_SPACE:
+                    return False
+        pygame.display.update()
+
+def information():
+    monster = True
+    chasing = False
+    while monster:
+        scroll(5,5)
+        title()
+        red(120,135, not chasing)
+        info()
+        info2()
+        info3()
+        info4()
+        content6()
+        enemy(120,285)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                monster = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    monster = False
+                if event.key == pygame.K_SPACE:
+                    return False
+        pygame.display.update()
+
+def gameplay( monster2X, monster2Y, enemy2X, enemy2Y, playerX, playerY, enemyX, enemyY, monsterX, monsterY, left, right, up, down, previousup, previousdown, previousright, previousleft):
+    redX = 40
+    redY = 85
+    play = True
+    key_found = False
+    chasing = False
+    while play:
+        redraw(window)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                play = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    play = False
+                left = event.key == pygame.K_LEFT
+                right = event.key == pygame.K_RIGHT
+                up = event.key == pygame.K_UP
+                down = event.key == pygame.K_DOWN
+                if left and left != previousleft:
+                    playerX += -50
+                if right and right != previousright:
+                    playerX += 50
+                if up and up != previousup:
+                    playerY += -50
+                if down and down != previousdown:
+                    playerY += 50
+            if event.type == pygame.KEYUP:
+                left = False
+                right = False
+                up = False
+                down = False
+        enemyX += monsterX
+        enemy2X += monster2X
+        enemy2Y += monster2Y
+        if enemyX <=-10:
+            monsterX = 1
+            enemyX = -10
+        if enemyX >=440:
+            monsterX = -1
+            enemyX = 440
+        if playerX <=-10:
+            playerX=-10
+        if playerX >= 440:
+            playerX = 440
+        if playerY <=-15:
+            playerY=-15
+
+        if redX >= 440:
+            redX = 440
+        if redX <= -10:
+            redX = -10
+        if redY >= 435:
+            redY = 435
+        if redY <= -15:
+            redY = -15
+
+        if playerY >=435:
+            playerY= 435
+        if enemy2X< 140:
+            enemy2X = 140
+            monster2X = 0
+            monster2Y = 2
+        if enemy2X > 240:
+            enemy2X = 240
+            monster2X = 0
+            monster2Y = -2
+        if enemy2Y < 285:
+            enemy2Y = 285
+            monster2Y = 0
+            monster2X = -2
+        if enemy2Y > 385:
+            enemy2Y = 385
+            monster2Y = 0
+            monster2X = 2
+        player(playerX,playerY)
+        enemy(enemyX,enemyY)
+        enemy(enemy2X, enemy2Y)
+        place(40,85)
+        cage(40,85)
+        red(redX, redY, chasing)
+        torch(290, -8)
+        torch(140, -8)
+        block(90, -15)
+        block(90, 35)
+        block(140, 35)
+        block(340, -15)
+        block(340, 35)
+        block(290, 35)
+        block(340, 85)
+        block(440, 435)
+        block(440, 385)
+        block(440, 335)
+        block(290, 335)
+        block(-10, 435)
+        block(-10, 385)
+        block(-40, 435)
+        block(290, 435)
+        block(290, 385)
+        block(290, 285)
+        block(240, 435)
+        block(190, 435)
+        block(140, 435)
+        block(90, 435)
+        block(90, 385)
+        block(90, 335)
+        block(90, 285)
+        block(40, 435)
+        block(40, 385)
+        block(40, 335)
+        door(doorX, doorY)
+        key(keyX,keyY, key_found)
+        previousup = up
+        previousdown = down
+        previousright = right
+        previousleft = left
+        if playerX is enemyX:
+            if playerY is enemyY:
+                if enemyY is playerY:
+                    print("Game over")
+                    death()
+                    return False
+
+
+        if playerX == 390:
+            if enemyX == 390:
+                if enemyY is playerY:
+                    print("Hello")
+                    print("Game over")
+                    death()
+                    return False
+
+        if playerX == 340:
+            if enemyX ==340:
+                if enemyY is playerY:
+                    print("Game over")
+                    death()
+                    return False
+
+        if playerX == 290:
+            if enemyX == 290:
+                if enemyY is playerY:
+                    print("Game over")
+                    death()
+                    return False
+
+        for (x,y) in coord:
+                if (x,y) == (playerX,playerY):
+                    print("Game over")
+                    death()
+                    return False
+
+        if playerX == 390:
+            if playerY == 435:
+                key_found = True
+                chasing = True
+        if playerX == enemy2X:
+            if playerY == enemy2Y:
+                death()
+                return False
+
+        if chasing is True:
+            black(40, 85)
+            deltax = playerX - redX
+            deltay = playerY - redY
+            hyp = math.sqrt(deltax**2 + deltay**2)
+            redX += deltax/(hyp/0.8)
+            redY += deltay/(hyp/0.8)
+
+            if abs(redX - playerX)<0.7:
+                if abs(redY - playerY)<0.7:
+                    print("Game over")
+                    death()
+                    return False
+
+        if key_found is True:
+            if playerX == doorX:
+                if playerY == doorY:
+                    print("You win")
+                    win()
+                    return True
+
+
+        pygame.display.update()
+# level 2
+def harder(playerX, playerY, enemyX, monsterX, enemy2X, enemy2Y, ):
+    run = True
+    while run:
+        redraw(window)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    run = False
+                left = event.key == pygame.K_LEFT
+                right = event.key == pygame.K_RIGHT
+                up = event.key == pygame.K_UP
+                down = event.key == pygame.K_DOWN
+                if left and left != previousleft:
+                    playerX += -50
+                if right and right != previousright:
+                    playerX += 50
+                if up and up != previousup:
+                    playerY += -50
+                if down and down != previousdown:
+                    playerY += 50
+            if event.type == pygame.KEYUP:
+                left = False
+                right = False
+                up = False
+                down = False
+        enemyX += monsterX
+        enemy2X += monster2X
+        enemy2Y += monster2Y
+        if enemyX <= -10:
+            monsterX = 2
+            enemyX = -10
+        if enemyX >= 440:
+            monsterX = -2
+            enemyX = 440
+        if playerX <= -10:
+            playerX = -10
+        if playerX >= 440:
+            playerX = 440
+        if playerY <= -15:
+            playerY = -15
+        player(playerX, playerY)
+        torch(290, -8)
+        torch(140, -8)
+        block(90, -15)
+        block(90, 35)
+        block(140, 35)
+        block(340, -15)
+        block(340, 35)
+        block(290, 35)
+        block(340, 85)
+        block(90,85)
+        block(40,125)
+        block(40,165)
+        block(40,215)
+        block(90,215)
+        block(390,125)
+        block(390,165)
+        block(390,215)
+        block(340,215)
+        block(290,215)
+        block(240,215)
+        block(190,215)
+        pygame.display.update()
+
+start = instruction()
+
+if start is False:
+    ready = information()
+
+if ready is False:
+    choose = gameplay( monster2X, monster2Y, enemy2X, enemy2Y, playerX, playerY, enemyX, enemyY, monsterX, monsterY, left, right, up, down, previousup, previousdown, previousright, previousleft)
+
+#death options
+again_font = pygame.font.Font('freesansbold.ttf', 23)
+
+def playagain():
+    again = again_font.render("Press space to play again or esc to quit", True, (128,0,0))
+    screen.blit(again, (30,160))
+
+level_font = pygame.font.Font('freesansbold.ttf',23)
+def nextlevel():
+    level = level_font.render("Press space for next level or esc to quit", True, (255,255,128))
+    screen.blit(level, (30,100))
+
+die = True
+
+while die:
+    if choose is True:
+        nextlevel()
+        pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                die = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    die = False
+                if event.key == pygame.K_SPACE:
+                    trial = harder(playerX, playerY, enemyX, monsterX, enemy2X, enemy2Y,)
+    elif choose is False:
+        playagain()
+        pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                die = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    key_found = False
+                    choose =  gameplay( monster2X, monster2Y, enemy2X, enemy2Y, playerX, playerY, enemyX, enemyY, monsterX, monsterY, left, right, up,
+                                         down, previousup, previousdown, previousright, previousleft)
+                if event.key == pygame.K_ESCAPE:
+                        die = False
+    else:
+        die = False
